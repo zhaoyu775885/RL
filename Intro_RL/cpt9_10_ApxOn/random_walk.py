@@ -56,7 +56,7 @@ def Semi_gradient_TD(alpha=0.1, n_episode=1000, gamma=1, n_step=1):
             s_n_step_prev = s_queue[0]
             v_hat[(s_n_step_prev-1)//100+1] += alpha * (TD_target-v_hat[(s_n_step_prev-1)//100+1])
             s_queue.pop(0)
-            r_queue.pop(0)            
+            r_queue.pop(0)
     return v_hat[1:-1]
         
 if __name__ == '__main__':
