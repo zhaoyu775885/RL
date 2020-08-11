@@ -74,9 +74,9 @@ class Reinforce():
             for t in range(len(s_list)):
                 p = sigmoid(self.params[0])
                 grad_pi = 1-p if a_list[t]==self.env.MOVE_RIGHT else -p
-                self.params += lr*(g_list[t])*grad_pi
-                # self.params += lr*(g_list[t]-g0)*grad_pi, with MC estimation
-                # todo: with and without baseline
+                # self.params += lr*(g_list[t])*grad_pi
+                self.params += lr*(g_list[t]-g0)*grad_pi
+                # todo: with MC estimation
 
             print(_, g_list[0], self.params, sigmoid(self.params[0]))
             

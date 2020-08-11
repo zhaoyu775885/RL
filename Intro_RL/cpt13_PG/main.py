@@ -18,5 +18,5 @@ if __name__ == '__main__':
     pg = Reinforce(env, gamma=1)
     
     n_rollout = 1000
-    g0 = pg.train(rollout=n_rollout, init_lr=2**-13)
+    g0 = pg.train(rollout=n_rollout, init_lr=2**-9)
     plt.plot(g0)
