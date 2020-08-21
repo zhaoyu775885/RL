@@ -64,7 +64,7 @@ class SemiGradSarsa():
         self.env = env
         self.n_actions = self.env.num_actions
         self.weight = np.zeros([self.env.num_states])
-        self.epsilon = 0.1
+        self.epsilon = 0.01
         self.alpha = 1/8
         self.gamma = 0.9
     
