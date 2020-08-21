@@ -1,5 +1,4 @@
 import gym
-import time
 from tiles3 import tiles, IHT
 import numpy as np
 
@@ -22,11 +21,11 @@ def run():
     
 class MountainCar():
     def __init__(self, num_tilings=8):
-        self.env = gym.make("MountainCar-v0").env
+        self.env = gym.make('MountainCar-v0')
         self.num_states = 4096
         self.iht = IHT(self.num_states)
         self.num_tilings = num_tilings
-        self.num_tiles_one_dim = 10
+        self.num_tiles_one_dim = 8
         self.num_actions = self.env.action_space.n
         self.obs_ranges = [h-l for h,l in zip(self.env.observation_space.high,
                                               self.env.observation_space.low)]
@@ -52,21 +51,23 @@ class MountainCar():
     def take_action(self, a):
         obs, r, status, info = self.env.step(a)
         self.env.render()
-        self.state = obs # self.state = self.tilecoder(obs)
+        self.state = obs
         return obs, r, status
-    
-    def __del__(self):
-        print('running destructor')
-        self.env.close()
+
+    def close(self):
+        if self.env:
+            self.env.close()
+        self.env = None
+                
 
 class SemiGradSarsa():
     def __init__(self, env):
         self.env = env
         self.n_actions = self.env.num_actions
         self.weight = np.zeros([self.env.num_states])
-        self.epsilon = 0.01
-        self.alpha = 1/8
-        self.gamma = 0.9
+        self.epsilon = 0
+        self.alpha = 0.5/8
+        self.gamma = 0.99
     
     def q(self, state, action):
         active_tiles = self.env.tilecoder(state, action)
@@ -85,10 +86,10 @@ class SemiGradSarsa():
             q_val = self.q(state, action)
             if q_val>g_val:
                 g_val, g_action = q_val, action
-        return action
+        return g_action
     
     def train(self):
-        num_eposide = 100
+        num_eposide = 1
         for _ in range(num_eposide):
             s = self.env.init()
             a = self.greedy_epsilon(s)
@@ -104,7 +105,6 @@ class SemiGradSarsa():
                 a_ = self.greedy_epsilon(s_)
                 if (cnt+1) % 100 == 0:
                     print(self.weight)
-                # print(r+self.gamma*self.q(s_, a_)-self.q(s, a))
                 self.weight[tile_code] += self.alpha*(r+self.gamma*self.q(s_, a_)-self.q(s, a))
                 s, a = s_, a_
 
@@ -112,12 +112,6 @@ class SemiGradSarsa():
 if __name__ == '__main__':
     # run()
     env = MountainCar()
-    # for _ in range(100):
-    #     a = env.random_action()
-    #     info = env.take_action(a)
-    #     print(info)
-    
     leaner = SemiGradSarsa(env)
     leaner.train()
-    
-    del env
+    env.close()

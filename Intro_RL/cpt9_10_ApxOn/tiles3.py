@@ -106,8 +106,9 @@ def tileswrap (ihtORsize, numtilings, floats, wrapwidths, ints=[], readonly=Fals
 
 
 if __name__ == '__main__':
-    iht = IHT(1024)
-    indices = tiles(iht, 4, [0, 0])
+    # iht = IHT(1024)
+    iht = None
+    indices = tiles(iht, 1, [1.5, 0.4])
     print(indices)
-    indices = tiles(iht, 4, [0.25, 0])
+    indices = tiles(iht, 1, [0.2, 0.3])
     print(indices)
