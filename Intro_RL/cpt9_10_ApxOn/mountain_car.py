@@ -2,26 +2,18 @@ import gym
 from tiles3 import tiles, IHT
 import numpy as np
 
-def run():
-    #导入MountainCar-v0环境
-    env = gym.make('MountainCar-v0')
-    #初始化环境
-    env.reset()
-    #循环1000次
-    for _ in range(100):
-        #绘图
-        env.render()
-        #进行一个动作
-        a = env.action_space.sample()
-        print(a)
+def run_demo():
+    env = gym.make('MountainCar-v0') #导入MountainCar-v0环境
+    env.reset() #初始化环境
+    for _ in range(100): #循环100次
+        env.render() #绘图
+        a = env.action_space.sample() #进行一个动作
         info = env.step(a) # take a random action
-        # print(info)
-    #关闭
-    env.close()
+    env.close() #关闭
     
 class MountainCar():
     def __init__(self, num_tilings=8):
-        self.env = gym.make('MountainCar-v0')
+        self.env = gym.make('MountainCar-v0').env
         self.num_states = 4096
         self.iht = IHT(self.num_states)
         self.num_tilings = num_tilings
@@ -65,8 +57,8 @@ class SemiGradSarsa():
         self.env = env
         self.n_actions = self.env.num_actions
         self.weight = np.zeros([self.env.num_states])
-        self.epsilon = 0
-        self.alpha = 0.5/8
+        self.epsilon = 0.1
+        self.alpha = 0.1
         self.gamma = 0.99
     
     def q(self, state, action):
@@ -89,7 +81,7 @@ class SemiGradSarsa():
         return g_action
     
     def train(self):
-        num_eposide = 1
+        num_eposide = 20
         for _ in range(num_eposide):
             s = self.env.init()
             a = self.greedy_epsilon(s)
@@ -99,18 +91,19 @@ class SemiGradSarsa():
                 s_, r, done = self.env.take_action(a)
                 tile_code = self.env.tilecoder(s, a)
                 if done:
-                    print('really done?!', cnt)
+                    print('Game Over', cnt)
                     self.weight[tile_code] += self.alpha*(r-self.q(s, a))
                     break
                 a_ = self.greedy_epsilon(s_)
-                if (cnt+1) % 100 == 0:
-                    print(self.weight)
+                # if (cnt+1) % 100 == 0:
+                #     print(self.weight)
                 self.weight[tile_code] += self.alpha*(r+self.gamma*self.q(s_, a_)-self.q(s, a))
                 s, a = s_, a_
+            print(_+1, '-th trial')
+            # print(self.weight)
 
     
 if __name__ == '__main__':
-    # run()
     env = MountainCar()
     leaner = SemiGradSarsa(env)
     leaner.train()
