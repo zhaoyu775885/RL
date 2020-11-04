@@ -2,22 +2,14 @@ import gym
 from tiles3 import tiles, IHT
 import numpy as np
 
-def run():
-    #导入MountainCar-v0环境
-    env = gym.make('MountainCar-v0')
-    #初始化环境
-    env.reset()
-    #循环1000次
-    for _ in range(100):
-        #绘图
-        env.render()
-        #进行一个动作
-        a = env.action_space.sample()
-        print(a)
+def run_demo():
+    env = gym.make('MountainCar-v0') #导入MountainCar-v0环境
+    env.reset() #初始化环境
+    for _ in range(100): #循环100次
+        env.render() #绘图
+        a = env.action_space.sample() #进行一个动作
         info = env.step(a) # take a random action
-        # print(info)
-    #关闭
-    env.close()
+    env.close() #关闭
     
 class MountainCar():
     def __init__(self, 
@@ -226,8 +218,6 @@ class QLearning():
             
 
 if __name__ == '__main__':
-    # run()
-    
     # Algo 1: Semi-Gradient Sarsa
     env = MountainCar(num_tilings=8, num_tiles_one_dim=8, num_states=4096)
     leaner = SemiGradSarsa(env)
