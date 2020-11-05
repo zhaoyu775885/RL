@@ -89,31 +89,31 @@ class SemiGradSarsa():
         return g_action
     
     def train(self):
-        num_eposide = 1000
+        num_eposide = 100
         for _ in range(num_eposide):
             print('Episode ', _+1, ': ', end=' ')
             s = self.env.init()
             a = self.greedy_epsilon(s)
-            cnt = 0
             act_list = [a]
+            cnt = 0
             while True:
                 cnt += 1
                 tile_code = self.env.tilecoder(s, a)
                 s_, r, done = self.env.take_action(a)
-                act_list.append(a)
                 if done:
                     if cnt < 200:
-                        print('mission completed with {0} steps'.format(cnt))
+                        print('completed with {0} steps'.format(cnt))
                     else:
-                        print('mission failed')
+                        print('failed')
                     self.weight[tile_code] += self.alpha*(r-self.q(s, a))
                     break
                 a_ = self.greedy_epsilon(s_)
-                if (cnt+1) % 50 == 0 and self.debug:
-                    print(act_list)
-                    act_list.clear()
+                act_list.append(a_)
                 self.weight[tile_code] += self.alpha*(r+self.gamma*self.q(s_, a_)-self.q(s, a))
                 s, a = s_, a_
+                if cnt % 50 == 0 and self.debug:
+                    print(act_list)
+                    act_list.clear()
             if (_+1) % 5 == 0:
                 self.test()
                 self.epsilon *= 0.5
