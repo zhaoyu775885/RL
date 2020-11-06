@@ -12,23 +12,31 @@ def run_demo():
     env.close() #关闭
     
 class MountainCar():
-    def __init__(self, 
-                 num_tilings=8, 
+    def __init__(self,
+                 num_tilings=8,
                  num_tiles_one_dim=8,
-                 num_states=4096):
+                 num_states=4096,
+                 render=True):
         self.env = gym.make('MountainCar-v0')
-        self.num_states = num_states
-        self.iht = IHT(self.num_states)
+        # self.env = gym.make('CartPole-v0')
         self.num_tilings = num_tilings
+        self.num_states = num_states
+        self.default_render = render
+        self.iht = IHT(self.num_states)
         self.num_tiles_one_dim = num_tiles_one_dim
+        
+        # print(dir(self.env.observation_space))
+        # print(self.env.observation_space.high)
+        
         self.obs_ranges = [h-l for h,l in zip(self.env.observation_space.high,
                                               self.env.observation_space.low)]
         self.num_actions = self.env.action_space.n
         self.state = self.init()
         
+        
     def tilecoder(self, obs, act=None):
         if act is None:
-            return tiles(self.iht, self.num_tilings, 
+            return tiles(self.iht, self.num_tilings,
                          [self.num_tiles_one_dim* obs_dim / range_dim
                           for obs_dim, range_dim in zip(obs, self.obs_ranges)])
         else:
@@ -41,16 +49,15 @@ class MountainCar():
         def multi_hotcoder(indices):
             code = np.zeros(self.num_states, dtype=np.int)
             code[indices] = 1
-        hotcodes = []
-        for i, item in enumerate(obs):
-            tilecode = self.tilecoder(obs)
-            hotcode = multi_hotcoder(tilecode)
-            hotcodes.append(hotcode)
-        return hotcodes
+            return code
+        tilecode = self.tilecoder(obs)
+        hotcode = multi_hotcoder(tilecode)
+        return hotcode
 
     def init(self):
         obs = self.env.reset()
-        # self.env.render()
+        if self.default_render:
+            self.env.render()
         return obs
     
     def get_state(self):
@@ -61,7 +68,8 @@ class MountainCar():
         
     def take_action(self, a):
         s, r, status, info = self.env.step(a)
-        # self.env.render()
+        if self.default_render:
+            self.env.render()
         self.state = s
         return s, r, status
 
@@ -76,7 +84,11 @@ class MountainCar():
             
 
 if __name__ == '__main__':
-    env = MountainCar(num_tilings=8, num_tiles_one_dim=8, num_states=4096)
-    s = env.get_state()
-    tilecode = env.tilecoder(s)
+    env = MountainCar(num_tilings=8, num_tiles_one_dim=8, num_states=4096, render=True)
+    
+    while True:
+        a = env.random_action()
+        s_, r, done = env.take_action(a)
+        if done:
+            break
     

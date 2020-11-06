@@ -16,19 +16,21 @@ class SemiGradSarsa():
         active_tiles = self.env.tilecoder(state, action)
         return np.sum(self.weight[active_tiles])
     
-    def greedy_epsilon(self, state):
+    def greedy_epsilon(self, state, display=False):
         rand = np.random.rand()
         if rand <= self.epsilon:
             return self.env.random_action()
-        return self.greedy(state)
+        return self.greedy(state, display)
     
-    def greedy(self, state):
+    def greedy(self, state, dispaly=False):
         g_action = 0
         g_val = self.q(state, g_action)
         for action in range(1, self.n_actions):
             q_val = self.q(state, action)
             if q_val>g_val:
                 g_val, g_action = q_val, action
+        if dispaly:
+            print(g_val)
         return g_action
     
     def train(self, num_eposide=1000):
@@ -40,7 +42,7 @@ class SemiGradSarsa():
             cnt, done = 0, False
             while not done:
                 s_, r, done = self.env.take_action(a)
-                a_ = self.greedy_epsilon(s_)
+                a_ = self.greedy_epsilon(s_, display=(_>20))
                 act_list.append(a)
                 tile_code = self.env.tilecoder(s, a)
                 self.weight[tile_code] += self.alpha*(r+self.gamma*self.q(s_, a_)-self.q(s, a))
