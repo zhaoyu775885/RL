@@ -12,4 +12,6 @@ clean_recursive() {
     done
 }
 
+echo ' '
+
 clean_recursive .

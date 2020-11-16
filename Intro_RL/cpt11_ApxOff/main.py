@@ -36,9 +36,9 @@ if __name__ == '__main__':
     # leaner.train(num_eposide=1000)
     # env.close()
     
-    # # Algo 3: Deep Q-Learning
-    # env = CartPole(render=False)
-    # leaner = DQN(env)
-    # leaner.train(num_eposide=1000)
-    # env.close()
+    # Algo 3: Deep Q-Learning
+    env = CartPole(render=False)
+    leaner = DQN(env)
+    leaner.train(num_eposide=1000)
+    env.close()
     
