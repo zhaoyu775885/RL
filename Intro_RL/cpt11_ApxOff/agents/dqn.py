@@ -18,7 +18,7 @@ import random
 class ValueNetwork(nn.Module):
     def __init__(self, n_states, n_actions):
         super(ValueNetwork, self).__init__()
-        n_hiddens = 100
+        n_hiddens = 512
         self.fc1 = nn.Linear(n_states, n_hiddens)
         self.fc2 = nn.Linear(n_hiddens, n_actions)
         
@@ -61,16 +61,19 @@ class ReplayMemory():
 class DeepQLearning():
     def __init__(self, env):
         self.env = env
-        self.n_actions = self.env.num_actions
         
-        self.qnet = ValueNetwork(self.env.num_states, self.n_actions)
+        self.qnet_online = ValueNetwork(self.env.dim_states, self.env.num_actions)
+        self.qnet_target = ValueNetwork(self.env.dim_states, self.env.num_actions)
+        self.save_model()
+        self.load_model()
+        
         self.loss_fn = nn.MSELoss()
         
         self.init_lr = 1e-3
-        self.opt = optim.SGD(self.qnet.parameters(), lr=self.init_lr, 
+        self.opt = optim.SGD(self.qnet_online.parameters(), lr=self.init_lr, 
                              momentum=0.9, weight_decay=1e-5)
         
-        self.memory = ReplayMemory(capacity=4096)
+        self.memory = ReplayMemory(capacity=2048)
         
         self.batch_size = 32
         self.epsilon = 0.1
@@ -87,28 +90,32 @@ class DeepQLearning():
         return self.greedy(state)
     
     def greedy(self, s):
-        hotcode = self.env.hotcoder(s)
-        vals = self.qnet(torch.Tensor(hotcode))
+        vals = self.qnet_online(torch.Tensor(s))
         return torch.argmax(vals).item()
     
-    def batch_hotcode(self, states):
-        hotcodes = []
+    def batch(self, states):
+        batch = []
         for state in states[:]:
-            hotcodes.append(self.env.hotcoder(state))
-        return torch.Tensor(hotcodes)
+            batch.append(state)
+        return torch.Tensor(batch)
     
-    def train_qnetwork(self):
+    def train_qnet(self, display=False):
         s, a, r, s_, status = self.memory.sample(self.batch_size)
-        qvals = self.qnet(self.batch_hotcode(s))
-        qvals_ = self.qnet(self.batch_hotcode(s_))
-        done = torch.Tensor(status)
+        qvals_ = self.qnet_target(self.batch(s_))
         max_qvals_, max_indices = torch.max(qvals_, dim=1)
         max_qvals_ = max_qvals_.detach()
+        done = torch.Tensor(status)
         targets = torch.Tensor(r) + self.gamma*(1-done)*max_qvals_
+        
+        qvals = self.qnet_online(self.batch(s))
         cur_qvals = qvals[torch.arange(self.batch_size), a]
-        # print(targets, cur_qvals)
         loss = self.metrics(targets, cur_qvals)
-        self.qnet.zero_grad()
+        if display:
+            print(loss.item())
+            # print(targets)
+            # print(cur_qvals)
+            
+        self.qnet_online.zero_grad()
         loss.backward()
         self.opt.step()
 
@@ -116,37 +123,49 @@ class DeepQLearning():
         for _ in range(num_eposide):
             print('Episode ', _+1, ': ', end=' ')
             s = self.env.init()
-            cnt = 0
-            while True:
-                cnt += 1
+            cnt, done = 0, False
+            while not done:
                 a = self.greedy_epsilon(s)
                 s_, r, done = self.env.take_action(a)
                 self.memory.record([s, a, r, s_, done])
                 s = s_
                 if self.memory.is_full():
-                    self.train_qnetwork()
-                if done:
-                    if cnt < 200:
-                        print('completed with {0} steps'.format(cnt))
-                    else:
-                        print('failed')
-                    break
-            if (_+1) % 100 == 0:
+                    self.train_qnet(cnt==149 and (_+1)%20==0)
+                    if (cnt+1) % 10 == 0:
+                        self.save_model()
+                        self.load_model()
+                
+                cnt += 1
+                
+            if cnt < 200:
+                print('completed with {0} steps'.format(cnt))
+            else:
+                print('failed')
+            if (_+1) % 50 == 0:
                 self.test()
                 self.epsilon *= 0.9
-                
+
     def test(self):
         print('Policy Testing: ', end=' ')
         s = self.env.init()
-        cnt = 0
-        while True:
-            cnt += 1
+        act_list = []
+        cnt, done = 0, False
+        while not done:
             a = self.greedy(s)
+            act_list.append(a)
             s_, r, done = self.env.take_action(a)
             s = s_
-            if done:
-                if cnt < 200:
-                    print('mission completed with {0} steps'.format(cnt))
-                else:
-                    print('mission failed')
-                break        
+            cnt += 1
+        if cnt < 200:
+                print('mission completed with {0} steps'.format(cnt))
+        else:
+            print('mission failed')
+            
+    def save_model(self):
+        model_path = './model/model.pth'
+        torch.save(self.qnet_online.state_dict(), model_path)
+        
+    def load_model(self):
+        model_path = './model/model.pth'
+        state_dict = torch.load(model_path, map_location=lambda storage, loc: storage.cuda())
+        self.qnet_target.load_state_dict(state_dict)

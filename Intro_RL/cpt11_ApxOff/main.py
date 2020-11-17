@@ -19,26 +19,27 @@ from agents.dqn import DeepQLearning as DQN
 
 if __name__ == '__main__':
     # # Algo 1: Semi-Gradient Sarsa
-    # env = MountainCar(num_tilings=8, num_tiles_one_dim=8, num_states=4096)
+    # env = MountainCar(render=False, tilecoding=True, num_tilings=8, num_tiles_one_dim=8)
     # leaner = SemiGradSarsa(env)
     # leaner.train(num_eposide=200)
     # env.close()
     
     # # Algo 2:
-    # env = MountainCar(num_tilings=1, num_tiles_one_dim=32, num_states=10000)
+    # # env = MountainCar(num_tilings=1, num_tiles_one_dim=32, num_states=10000)
+    # env = MountainCar(render=False, tilecoding=True, num_tilings=1, num_tiles_one_dim=32)
     # leaner = QLearning(env)
     # leaner.train(num_eposide=10000)
     # env.close()
     
-    # # Algo 3: Deep Q-Learning
-    # env = MountainCar(num_tilings=8, num_tiles_one_dim=8, num_states=512, render=False)
-    # leaner = DQN(env)
-    # leaner.train(num_eposide=1000)
-    # env.close()
-    
     # Algo 3: Deep Q-Learning
-    env = CartPole(render=False)
+    env = MountainCar(render=False, tilecoding=False)
     leaner = DQN(env)
     leaner.train(num_eposide=1000)
     env.close()
+    
+    # # Algo 3: Deep Q-Learning
+    # env = CartPole(render=False)
+    # leaner = DQN(env)
+    # leaner.train(num_eposide=1000)
+    # env.close()
     

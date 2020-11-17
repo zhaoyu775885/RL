@@ -6,7 +6,8 @@ class SemiGradSarsa():
     def __init__(self, env):
         self.env = env
         self.n_actions = self.env.num_actions
-        self.weight = np.zeros([self.env.num_states])
+        self.weight = np.zeros([self.env.num_states]) 
+        # the teminal states have initial zero values
         self.epsilon = 0.1
         self.alpha = 0.5/8
         self.gamma = 0.99
@@ -42,7 +43,7 @@ class SemiGradSarsa():
             cnt, done = 0, False
             while not done:
                 s_, r, done = self.env.take_action(a)
-                a_ = self.greedy_epsilon(s_, display=(_>20))
+                a_ = self.greedy_epsilon(s_)
                 act_list.append(a)
                 tile_code = self.env.tilecoder(s, a)
                 self.weight[tile_code] += self.alpha*(r+self.gamma*self.q(s_, a_)-self.q(s, a))
@@ -55,24 +56,24 @@ class SemiGradSarsa():
                 print('completed with {0} steps'.format(cnt))
             else:
                 print('failed')
-            if (_+1) % 5 == 0:
+                
+            if (_+1) % 10 == 0:
                 self.test()
-                self.epsilon *= 0.5
+                self.epsilon *= 0.9
                 
     def test(self):
         print('Policy Testing: ', end=' ')
         s = self.env.init()
         act_list = []
-        cnt = 0
-        while True:
-            cnt += 1
+        cnt, done = 0, False
+        while not done:
             a = self.greedy(s)
             act_list.append(a)
             s_, r, done = self.env.take_action(a)
             s = s_
-            if done:
-                if cnt < 200:
-                    print('mission completed with {0} steps'.format(cnt))
-                else:
-                    print('mission failed')
-                break
+            cnt += 1
+        if cnt < 200:
+                print('mission completed with {0} steps'.format(cnt))
+        else:
+            print('mission failed')
+            
