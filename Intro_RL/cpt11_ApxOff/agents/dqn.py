@@ -18,18 +18,20 @@ import random
 class ValueNetwork(nn.Module):
     def __init__(self, n_states, n_actions):
         super(ValueNetwork, self).__init__()
-        n_hiddens = 512
+        n_hiddens = 1024
         self.fc1 = nn.Linear(n_states, n_hiddens)
+        # self.fc3 = nn.Linear(n_hiddens, n_hiddens)
         self.fc2 = nn.Linear(n_hiddens, n_actions)
         
     def forward(self, states):
         hiddens = F.relu(self.fc1(states))
+        # hiddens = F.relu(self.fc3(hiddens_)) + hiddens_
         vals = self.fc2(hiddens)
         return vals
 
 
 class ReplayMemory():
-    def __init__(self, capacity=256):
+    def __init__(self, capacity=4096):
         self.memory = deque()
         self.capacity = capacity
         
@@ -72,9 +74,9 @@ class DeepQLearning():
         self.init_lr = 1e-3
         self.opt = optim.SGD(self.qnet_online.parameters(), lr=self.init_lr, 
                              momentum=0.9, weight_decay=1e-5)
-        
+
         self.memory = ReplayMemory(capacity=2048)
-        
+
         self.batch_size = 32
         self.epsilon = 0.1
         self.gamma = 0.99
@@ -121,7 +123,6 @@ class DeepQLearning():
 
     def train(self, num_eposide=10):
         for _ in range(num_eposide):
-            print('Episode ', _+1, ': ', end=' ')
             s = self.env.init()
             cnt, done = 0, False
             while not done:
@@ -130,20 +131,25 @@ class DeepQLearning():
                 self.memory.record([s, a, r, s_, done])
                 s = s_
                 if self.memory.is_full():
-                    self.train_qnet(cnt==149 and (_+1)%20==0)
-                    if (cnt+1) % 10 == 0:
+                    self.train_qnet() # cnt==149 and (_+1)%20==0
+                    if (cnt+1) % 50 == 0:
                         self.save_model()
                         self.load_model()
-                
                 cnt += 1
                 
-            if cnt < 200:
-                print('completed with {0} steps'.format(cnt))
-            else:
-                print('failed')
-            if (_+1) % 50 == 0:
-                self.test()
+            if (_+1) % 1 == 0:
+                print('Episode ', _+1, ': ', end=' ')
+                if cnt < 200:
+                    print('completed with {0} steps'.format(cnt))
+                else:
+                    print('failed')
+            
+            if (_+1) % 100 == 0:
                 self.epsilon *= 0.9
+            
+            if (_+1) % 100 == 0:
+                self.test()
+            
 
     def test(self):
         print('Policy Testing: ', end=' ')

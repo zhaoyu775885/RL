@@ -39,11 +39,11 @@ class MountainCar():
                                                   self.env.observation_space.low)]
             
         
-        print('|*********** INFO ***********|')
+        print('************ INFO ***********')
         print('Env=', 'MountainCar-v0', 
-              'dim_state=', self.dim_states, 
-              'num_actions=', self.num_actions)
-        print('|----------------------------|\n')
+              '\ndim_state=', self.dim_states,
+              '\nnum_actions=', self.num_actions)
+        print('----------------------------\n')
         
         
     def init(self):

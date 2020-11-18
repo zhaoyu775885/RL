@@ -7,14 +7,14 @@ from agents.dqn import DeepQLearning as DQN
 
 # tilecoding is one type of feature engineering
 # for linear policy and linear function approximation,
-# whith is suited for SemiGradient-Sarsa and Q-learning(with Q-table).
+# whith is suited for SemiGradient-Sarsa and Q-learning (with Q-table).
 # for neural network approximator, the input could be the raw state data.
 # So, what is left is:
 # 0. save model for each algorithm
 # 1. replace the raw state version of DQN
-# 2. transfer to CartPole-v0 and v1
+# 2. transfer to CartPole-v1
 # 3. Read the ERL cpt 9-11 and DQN paper
-# 4. Try Double-DQN and go up towards Rainbow
+# 4. DDQN, Dueling, and Prioritized Replay DQN and go up towards Rainbow
 
 
 if __name__ == '__main__':
